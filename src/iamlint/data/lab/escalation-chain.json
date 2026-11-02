@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "MintCredentials",
+      "Effect": "Allow",
+      "Action": "iam:CreateAccessKey",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AttachAdmin",
+      "Effect": "Allow",
+      "Action": ["iam:AttachUserPolicy", "iam:PutUserPolicy"],
+      "Resource": "*"
+    }
+  ]
+}
