@@ -50,7 +50,10 @@ jobs:
           iamlint demo --json > /tmp/demo.json
           python -c "import json; d=json.load(open('/tmp/demo.json')); print('demo findings:', len(d['findings']), 'grade', d['grade'])"
           iamlint lab --out /tmp/iam-lab
-          iamlint /tmp/iam-lab --min-severity high --compact
+          # The lab is *supposed* to have findings, so this scan is a smoke test
+          # of the exit-code path, not a gate: --fail-on none keeps it at 0.
+          iamlint /tmp/iam-lab --min-severity high --compact --fail-on none
+          iamlint /tmp/iam-lab --min-severity high --quiet || echo "exit 1 on findings, as designed"
 
       - name: MCP manifest check
         run: |
