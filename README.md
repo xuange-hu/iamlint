@@ -29,6 +29,17 @@ because "remove one of these two" is not actionable if you cannot see both.
 
 ---
 
+## Contents
+
+- [Why a second pass](#why-a-second-pass)
+- [Run it in three steps](#run-it-in-three-steps)
+- [Commands](#commands)
+- [The rules (49)](#the-rules-49)
+- [What makes it different](#what-makes-it-different)
+- [Install](#install)
+- [Reading the output](#reading-the-output)
+- [Docs](#docs)
+
 ## Why a second pass
 
 Read this policy one statement at a time and nothing looks alarming:
