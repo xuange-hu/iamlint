@@ -72,6 +72,7 @@ def privilege_paths(text: str) -> dict:
 
 
 def list_rules(category: str = "") -> dict:
+    """List the rule set, optionally filtered to one category."""
     rows = []
     for rid in rule_ids():
         meta = RULES[rid]
@@ -82,6 +83,7 @@ def list_rules(category: str = "") -> dict:
 
 
 def explain(rule_id: str) -> dict:
+    """Explain one rule: what it detects, why it matters and the fix."""
     meta = RULES.get(rule_id.upper())
     if meta is None:
         return {"error": f"unknown rule {rule_id}", "known": rule_ids()}
@@ -96,6 +98,7 @@ def explain(rule_id: str) -> dict:
 
 
 def demo() -> dict:
+    """Run the built-in demo corpus that exercises every rule."""
     report = run_demo()
     data = report_to_dict(report)
     data["summary"] = {
@@ -125,30 +128,38 @@ def build_server():
 
     mcp = FastMCP("iamlint")
 
-    @mcp.tool(name="iamlint_scan_text")
     def _scan_text(text: str, min_severity: str = "info") -> str:
         return json.dumps(scan_text(text, min_severity=min_severity))
 
-    @mcp.tool(name="iamlint_scan_path")
     def _scan_path(path: str, min_severity: str = "info", bundle: bool = False) -> str:
         return json.dumps(scan_path(path, min_severity=min_severity, bundle=bundle))
 
-    @mcp.tool(name="iamlint_privilege_paths")
     def _privilege_paths(text: str) -> str:
         return json.dumps(privilege_paths(text))
 
-    @mcp.tool(name="iamlint_rules")
     def _rules(category: str = "") -> str:
         return json.dumps(list_rules(category))
 
-    @mcp.tool(name="iamlint_explain")
     def _explain(rule_id: str) -> str:
         return json.dumps(explain(rule_id))
 
-    @mcp.tool(name="iamlint_demo")
     def _demo() -> str:
         return json.dumps(demo())
 
+    # FastMCP reads fn.__doc__ at registration time, so copy the underlying
+    # function's docstring onto each wrapper *before* mcp.tool() runs -
+    # otherwise every tool is served with an empty description and the agent
+    # has no idea what it is calling.
+    for name, wrapper, fn in (
+        ("iamlint_scan_text", _scan_text, scan_text),
+        ("iamlint_scan_path", _scan_path, scan_path),
+        ("iamlint_privilege_paths", _privilege_paths, privilege_paths),
+        ("iamlint_rules", _rules, list_rules),
+        ("iamlint_explain", _explain, explain),
+        ("iamlint_demo", _demo, demo),
+    ):
+        wrapper.__doc__ = fn.__doc__
+        mcp.tool(name=name)(wrapper)
     return mcp
 
 
