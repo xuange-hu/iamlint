@@ -10,7 +10,7 @@ way are welcome.
 git clone https://github.com/xuange-hu/iamlint
 cd iamlint
 pip install -e ".[mcp]" pytest ruff
-pytest                 # 252 tests
+pytest                 # 295 tests
 ruff check .
 ```
 

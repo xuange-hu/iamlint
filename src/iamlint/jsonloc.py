@@ -20,8 +20,14 @@ once, so ``line_col(index)`` is a binary search rather than a rescan.
 from __future__ import annotations
 
 import bisect
+import re
 from dataclasses import dataclass, field
 from typing import Any
+
+# RFC 8259 number grammar, enforced in full: the scanner is greedy so that
+# `1-2` stops at the right place, but `01` and `5.` are not JSON (AWS rejects
+# them too) and must not parse as 1 and 5.0.
+_JSON_NUMBER = re.compile(r"-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?\Z")
 
 
 class JsonError(Exception):
@@ -197,10 +203,10 @@ class _Parser:
             # real validator, so an impossible number surfaces exactly here.
             self.i += 1
         raw = self.text[start : self.i]
-        try:
-            val: Any = int(raw) if "." not in raw and "e" not in raw and "E" not in raw else float(raw)
-        except ValueError as exc:
-            raise self.fail(f"malformed number: {raw}") from exc
+        if not _JSON_NUMBER.match(raw):
+            # point at the start of the number, where the violation begins
+            raise self.fail(f"malformed number: {raw}", index=start)
+        val: Any = int(raw) if "." not in raw and "e" not in raw and "E" not in raw else float(raw)
         return Node(val, line, col, path)
 
     def string(self, path: str) -> Node:
@@ -224,10 +230,25 @@ class _Parser:
                     if len(hexpart) < 4:
                         raise self.fail("truncated \\u escape")
                     try:
-                        out.append(chr(int(hexpart, 16)))
+                        code = int(hexpart, 16)
                     except ValueError as exc:
                         raise self.fail(f"bad \\u escape: {hexpart}") from exc
                     self.i += 5
+                    # A high surrogate immediately followed by its low
+                    # surrogate is one astral character. Emitting two lone
+                    # surrogates instead would crash every later
+                    # .encode("utf-8") on this value (SARIF and JSON reports
+                    # both encode it), while json.loads pairs them.
+                    if 0xD800 <= code <= 0xDBFF and self.text[self.i : self.i + 2] == "\\u":
+                        low_hex = self.text[self.i + 2 : self.i + 6]
+                        try:
+                            low = int(low_hex, 16)
+                        except ValueError:
+                            low = -1
+                        if 0xDC00 <= low <= 0xDFFF:
+                            self.i += 6
+                            code = 0x10000 + ((code - 0xD800) << 10) + (low - 0xDC00)
+                    out.append(chr(code))
                     continue
                 if esc not in _ESCAPES:
                     raise self.fail(f"unknown escape: \\{esc}")

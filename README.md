@@ -1,7 +1,7 @@
 # iamlint
 
 [![CI](https://github.com/xuange-hu/iamlint/actions/workflows/ci.yml/badge.svg)](https://github.com/xuange-hu/iamlint/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-252%20passing-brightgreen)](https://github.com/xuange-hu/iamlint/actions/workflows/ci.yml)
+[![tests](https://img.shields.io/badge/tests-295%20passing-brightgreen)](https://github.com/xuange-hu/iamlint/actions/workflows/ci.yml)
 [![python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/)
 [![dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen)](https://github.com/xuange-hu/iamlint/blob/main/pyproject.toml)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -152,7 +152,7 @@ From source:
 git clone https://github.com/xuange-hu/iamlint
 cd iamlint
 pip install -e .
-pip install pytest && python -m pytest -q      # 252 tests
+pip install pytest && python -m pytest -q      # 295 tests
 ```
 
 Requires Python 3.10+. No AWS account, no credentials, no network at runtime.
